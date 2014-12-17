@@ -1,7 +1,9 @@
 from blinkstick import blinkstick
 from time import sleep
 from random import randint
-import datetime
+from datetime import datetime, time, timedelta
+import requests
+import logging
 
 
 RED = (255, 0, 0)
@@ -43,32 +45,73 @@ def flash(colour, speed=20):
     return morph(colours(), speed)
 
 
+def single_colour(colour):
+    while True:
+        yield colour
+
+
+class BuildStatus(object):
+    def __init__(self, branch):
+        self.url = 'http://buildbot.eng.velocix.com/cgi-bin/results.py?page=recentbuilds&type=json&branch=%s&limit=1' % branch
+        self.last_poll = datetime(1970, 1, 1)
+        self.build_info = None
+
+    def failing(self):
+        time_since_last_poll = datetime.now() - self.last_poll
+        if time_since_last_poll.seconds > 300:
+            logging.info("Polling build")
+            self.last_poll = datetime.now() # Do this before the poll so if the poll fails we don't spin
+            self.build_info = requests.get(self.url).json()[0]
+            logging.info("Build status: %s", self.build_info)
+        return self.build_info['result'] != 0
+
+
 class Tree(object):
     def __init__(self, led_count=10):
+        self.bstick = None
         self.led_count = led_count
         self.colours = [morph(christmas_colours(20)) for _ in range(led_count)]
         self.red_flash = [flash(RED) for _ in range(led_count)]
+        self.red = [single_colour((20, 0, 0)) for _ in range(led_count)]
         self.white_flash = [flash(WHITE) for _ in range(led_count)]
+        self.alert_since = None
+        self.build = BuildStatus('raptor')
 
     def connect(self):
         self.bstick = blinkstick.BlinkStickPro(r_led_count=self.led_count)
         self.bstick.connect()
 
     def alert(self):
-        return False
+        alert_condition = self.build.failing()
+
+        if alert_condition and self.alert_since is None:
+            self.alert_since = datetime.now()
+
+        if not alert_condition and self.alert_since is not None:
+            self.alert_since = None
+
+        return alert_condition
+
+    def alert_duration(self):
+        if self.alert_since is None:
+            return timedelta()
+
+        return datetime.now() - self.alert_since
 
     def alarm(self):
         """Alarm at 11:45 for 30 seconds"""
 
-        alarm_time = datetime.time(12, 45)
-        now = datetime.datetime.now().time()
+        alarm_time = time(12, 45)
+        now = datetime.now().time()
         return (alarm_time.hour == now.hour
                 and alarm_time.minute == now.minute
                 and now.second < 30)
 
     def select_colours(self):
         if self.alert():
-            return self.red_flash
+            if self.alert_duration().seconds < 10:
+                return self.red_flash
+            return self.red
 
         if self.alarm():
             return self.white_flash
@@ -85,10 +128,12 @@ class Tree(object):
                 self.bstick.send_data_all()
                 sleep(0.01)
         finally:
-            self.bstick.off()
+            if self.bstick:
+                self.bstick.off()
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
     tree = Tree()
     tree.connect()
     tree.loop()
