@@ -8,6 +8,7 @@ import logging
 
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
+STANDUP_TIME = time(11, 45)
 
 
 def random_colours(max_rgb):
@@ -102,13 +103,12 @@ class Tree(object):
         return datetime.now() - self.alert_since
 
     def alarm(self):
-        """Alarm at 11:45 for 30 seconds"""
-
-        alarm_time = time(12, 45)
         now = datetime.now().time()
-        return (alarm_time.hour == now.hour
-                and alarm_time.minute == now.minute
-                and now.second < 30)
+        alarm_active = (STANDUP_TIME.hour == now.hour
+                        and STANDUP_TIME.minute == now.minute)
+        if alarm_active:
+            logging.warning("Alarm: Daily Stand-Up")
+        return alarm_active
 
     def select_colours(self):
         if self.alert():
