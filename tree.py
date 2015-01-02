@@ -54,16 +54,19 @@ class BuildStatus(object):
     def __init__(self, branch):
         self.url = 'http://buildbot.eng.velocix.com/cgi-bin/results.py?page=recentbuilds&type=json&branch=%s&limit=1' % branch
         self.last_poll = datetime(1970, 1, 1)
-        self.build_info = None
+        self.build_info = {}
 
     def failing(self):
         time_since_last_poll = datetime.now() - self.last_poll
         if time_since_last_poll.seconds > 300:
             logging.info("Polling build")
-            self.last_poll = datetime.now() # Do this before the poll so if the poll fails we don't spin
-            self.build_info = requests.get(self.url).json()[0]
-            logging.info("Build status: %s", self.build_info)
-        return self.build_info['result'] != 0
+            try:
+                self.build_info = requests.get(self.url).json()[0]
+                logging.info("Build status: %s", self.build_info)
+            except requests.exceptions.ConnectionError:
+                logging.exception("Unable to connect to buildbot for build status")
+            self.last_poll = datetime.now()
+        return self.build_info.get('result', 0) != 0
 
 
 class Tree(object):
