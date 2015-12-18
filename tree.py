@@ -133,7 +133,7 @@ class Tree(object):
                     r, g, b = next(colours[index])
                     self.bstick.set_color(channel=0, index=index, r=r, g=g, b=b)
                 self.bstick.send_data_all()
-                sleep(0.01)
+                sleep(0.05)
         finally:
             if self.bstick:
                 self.bstick.off()
