@@ -4,6 +4,7 @@ from random import randint
 from datetime import datetime, time, timedelta
 import requests
 import logging
+import httplib
 
 
 RED = (255, 0, 0)
@@ -62,10 +63,13 @@ class BuildStatus(object):
         if time_since_last_poll.seconds > 300:
             logging.info("Polling build")
             try:
-                self.build_info = requests.get(self.url).json()[0]
+                response = requests.get(self.url, timeout=5)
+                response.raise_for_status()
+                self.build_info = response.json()[0]
                 logging.info("Build status: %s", self.build_info)
-            except requests.exceptions.ConnectionError:
-                logging.exception("Unable to connect to buildbot for build status")
+            except requests.exceptions.RequestException:
+                logging.exception(
+                    "Unable to connect to buildbot for build status")
             self.last_poll = datetime.now()
         return self.build_info.get('result', 0) != 0
 
