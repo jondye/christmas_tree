@@ -75,12 +75,12 @@ class BuildStatus(object):
 
 
 class Tree(object):
-    def __init__(self, led_count=10, brightness=20):
+    def __init__(self, led_count=10, brightness=255):
         self.bstick = None
         self.led_count = led_count
         self.colours = [morph(christmas_colours(brightness)) for _ in range(led_count)]
         self.red_flash = [flash(RED) for _ in range(led_count)]
-        self.red = [single_colour((20, 0, 0)) for _ in range(led_count)]
+        self.red = [single_colour((brightness, 0, 0)) for _ in range(led_count)]
         self.white_flash = [flash(WHITE) for _ in range(led_count)]
         self.alert_since = None
         self.build = BuildStatus('raptor')
