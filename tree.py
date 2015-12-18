@@ -9,7 +9,7 @@ import httplib
 
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
-STANDUP_TIME = time(11, 45)
+STANDUP_TIME = time(10, 15)
 
 
 def random_colours(max_rgb):
@@ -83,7 +83,7 @@ class Tree(object):
         self.red = [single_colour((brightness, 0, 0)) for _ in range(led_count)]
         self.white_flash = [flash(WHITE) for _ in range(led_count)]
         self.alert_since = None
-        self.build = BuildStatus('raptor')
+        self.build = BuildStatus('unicorn')
 
     def connect(self):
         self.bstick = blinkstick.BlinkStickPro(r_led_count=self.led_count)
