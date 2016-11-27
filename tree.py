@@ -4,17 +4,11 @@ from random import randint
 from datetime import datetime, time, timedelta
 import requests
 import logging
-import httplib
 
 
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 STANDUP_TIME = time(10, 15)
-
-
-def random_colours(max_rgb):
-    while True:
-        yield randint(0, max_rgb), randint(0, max_rgb), randint(0, max_rgb)
 
 
 def christmas_colours(max_rgb):
@@ -108,8 +102,8 @@ class Tree(object):
 
     def alarm(self):
         now = datetime.now().time()
-        alarm_active = (STANDUP_TIME.hour == now.hour
-                        and STANDUP_TIME.minute == now.minute)
+        alarm_active = (STANDUP_TIME.hour == now.hour and
+                        STANDUP_TIME.minute == now.minute)
         if alarm_active:
             logging.warning("Alarm: Daily Stand-Up")
         return alarm_active
