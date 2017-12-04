@@ -108,28 +108,34 @@ class Tree(object):
                 sleep(0.05)
         finally:
             if self.bstick:
+                logging.info("Turning off LEDs")
                 self.bstick.off()
 
 
 def main():
     logging.basicConfig(level=logging.INFO)
 
-    poll_period = os.environ.get('POLL_PERIOD', 60)
-    server = os.environ.get('JENKINS_URI')
-    build_names = [
-        os.environ.get('JENKINS_JOB_%d' % (i+1))
-        for i in range(10)
-    ]
+    try:
 
-    j = Jenkins(server) if server else None
-    lights = [
-        BuildStatus(j, name).led_colours() if name else normal_colours()
-        for name in build_names
-    ]
+        poll_period = os.environ.get('POLL_PERIOD', 60)
+        server = os.environ.get('JENKINS_URI')
+        build_names = [
+            os.environ.get('JENKINS_JOB_%d' % (i+1))
+            for i in range(10)
+        ]
 
-    tree = Tree(lights)
-    tree.connect()
-    tree.loop()
+        j = Jenkins(server) if server else None
+        lights = [
+            BuildStatus(j, name).led_colours() if name else normal_colours()
+            for name in build_names
+        ]
+
+        tree = Tree(lights)
+        tree.connect()
+        tree.loop()
+
+    except Exception as e:
+        logging.exception("Failed in main loop")
 
 if __name__ == '__main__':
     main()
