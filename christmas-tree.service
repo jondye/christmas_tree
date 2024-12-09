@@ -1,0 +1,23 @@
+[Unit]
+Description=Christmas Tree Lights
+After=network.target
+
+[Service]
+Type=idle
+Restart=on-failure
+User=root
+Environment="JENKINS_URI=https://jenkins.example.com/"
+Environment="JENKINS_JOB_10=full-job"
+Environment="JENKINS_JOB_9=partial-job"
+Environment="JENKINS_JOB_8=test-job"
+Environment="JENKINS_JOB_7=spelling-test"
+Environment="JENKINS_JOB_6=grammar-test"
+Environment="JENKINS_JOB_5=driving-test"
+Environment="JENKINS_JOB_4=coding-test"
+Environment="JENKINS_JOB_3=pregnancy-test"
+Environment="JENKINS_JOB_2=eye-test"
+Environment="JENKINS_JOB_1=blood-test"
+ExecStart=/bin/bash -c 'cd /projects/src/christmas_tree/ && source .venv/bin/activate && python tree.py'
+
+[Install]
+WantedBy=multi-user.target
