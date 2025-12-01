@@ -1,3 +1,4 @@
-jenkins-webapi
 BlinkStick
+jenkins-webapi
+pyusb
 requests
