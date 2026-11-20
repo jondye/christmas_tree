@@ -7,6 +7,7 @@ import requests
 import logging
 import os
 import signal
+import sys
 import threading
 
 
@@ -75,7 +76,7 @@ class BuildStatus(object):
 
     def update_if_needed(self):
         time_since_last_poll = datetime.now() - self.last_poll
-        if time_since_last_poll.seconds > self.poll_period:
+        if time_since_last_poll.total_seconds() > self.poll_period:
             self.update()
             self.last_poll = datetime.now()
 
@@ -119,7 +120,7 @@ def main():
 
     try:
 
-        poll_period = os.environ.get('POLL_PERIOD', 60)
+        poll_period = int(os.environ.get('POLL_PERIOD', 60))
         server = os.environ.get('JENKINS_URI')
         build_names = [
             os.environ.get('JENKINS_JOB_%d' % (i+1))
@@ -128,7 +129,7 @@ def main():
 
         j = Jenkins(server) if server else None
         lights = [
-            BuildStatus(j, name).led_colours() if name else normal_colours()
+            BuildStatus(j, name, poll_period).led_colours() if name else normal_colours()
             for name in build_names
         ]
 
@@ -145,8 +146,9 @@ def main():
         tree.connect()
         tree.loop_until(stop_event)
 
-    except Exception as e:
+    except Exception:
         logging.exception("Failed in main loop")
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()

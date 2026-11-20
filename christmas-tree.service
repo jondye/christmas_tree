@@ -5,6 +5,7 @@ After=network.target
 [Service]
 Type=idle
 Restart=on-failure
+RestartSec=30
 User=root
 Environment="JENKINS_URI=https://jenkins.example.com/"
 Environment="JENKINS_JOB_10=full-job"
