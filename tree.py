@@ -6,6 +6,8 @@ from time import sleep
 import requests
 import logging
 import os
+import signal
+import threading
 
 
 def pass_colours(max_rgb):
@@ -98,9 +100,9 @@ class Tree(object):
         self.bstick = blinkstick.BlinkStickPro(r_led_count=self.led_count)
         self.bstick.connect()
 
-    def loop(self):
+    def loop_until(self, stop_event):
         try:
-            while True:
+            while not stop_event.is_set():
                 for index, colour in enumerate(self.colours):
                     r, g, b = next(colour)
                     self.bstick.set_color(channel=0, index=index, r=r, g=g, b=b)
@@ -131,8 +133,17 @@ def main():
         ]
 
         tree = Tree(lights)
+        stop_event = threading.Event()
+
+        def signal_handler(signum, frame):
+            logging.info("Received signal %d, stopping...", signum)
+            stop_event.set()
+
+        signal.signal(signal.SIGTERM, signal_handler)
+        signal.signal(signal.SIGINT, signal_handler)
+
         tree.connect()
-        tree.loop()
+        tree.loop_until(stop_event)
 
     except Exception as e:
         logging.exception("Failed in main loop")
